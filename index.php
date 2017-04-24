@@ -9,7 +9,7 @@ echo "
 		</div>
 		
 		<div class='col-l-12 logincontent' >
-			<form id='login' action='login.php' method='post'>
+			<form name='Login' id='login' onSubmit='return validate()' action='login.php' method='post'>
 				<div id='logo'></div>
 				
 				<input type='text' name='username' placeholder='Username' class='center' autocomplete='off' style='margin-bottom:10px;'/><br>
@@ -29,6 +29,21 @@ echo "
 	</div>
 	<!-- end of content -->
 ";
+
+echo "
+	<script>
+		function validate() {
+			if (document.Login.username.value.length <= 0 || document.Login.password.value.length <= 0) {
+				alert('Invalid username or password.');
+				return false;
+			}
+		}
+	</script>
+";
+
+if (isset($_GET['invalid_login'])) {
+	echo "<script>alert('Invalid username or password.');</script>";
+}
 
 readfile("assets/foot.html");
 ?>
