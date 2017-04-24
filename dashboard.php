@@ -8,9 +8,11 @@ if (isset($_SESSION['user']) && isset($_SESSION['pass'])) {
 	$pass = $_SESSION['pass'];
 	
 	echo "
-		<a href='logout.php'>Logout</a><br>
-		Hello $user,<br>
-		Your password is '$pass'.
+		<div id='sidebar' class='test'>
+			<h1><a href='logout.php'>A</a></h1>
+			<h1>B</h1>
+			<h1>C</h1>
+		</div>
 	";
 } else {
 	header("Location: logout.php?invalid_login");
