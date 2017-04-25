@@ -49,7 +49,7 @@ function start($exname) {
 
 function takeExam($conn, $exname) {
 	$out = "<h2>$exname</h2><hr>
-		<form name='exam' onSubmit='return grade()' action='exam.php' method='POST'>";
+		<form name='exam' onSubmit='return validate()' action='grader.php' method='POST'>";
 	
 	$question = $conn->query("SELECT * FROM question WHERE ex_name = '$exname'");
 	
@@ -62,31 +62,14 @@ function takeExam($conn, $exname) {
 			$out .= "<input type='radio' name='$q_row[number]' value='$c_row[id]'> $c_row[text]<br>";
 		}
 		
-		$out .= "<input type='hidden' name='answer' value='$q_row[correct]'>
-				<input type='hidden' name='points' value='$q_row[num_points]'></div>";
+		$out .= "</div>";
 	}
 	
 	$out .= "<input type='submit' value='Submit'><input type='hidden' name='exam_name' value='$exname'></form>";
 	
 	$out .= "
 		<script>
-			function grade() {
-				var answers = getAnswers();
-				if (answers == 'false')
-					return false;
-				var correct = getCorrect();
-				var points = getPoints();
-				var totalPoints = 0;
-				
-				for (var i = 0; i < correct.length; i += 2) {
-					if (correct.charAt(i) == answers.charAt(i)) {
-						totalPoints += parseInt(points.charAt(i));
-					}
-				}
-
-			}
-
-			function getAnswers() {
+			function validate() {
 				var questions = document.exam.elements;
 				var answers = '';
 				var comma = '';
@@ -106,39 +89,9 @@ function takeExam($conn, $exname) {
 				
 				if (answers.length != count - 1) {
 					alert('Not all questions have been answered!');
-					return 'false';
+					return false;
 				} else
-					return answers;
-			}
-
-			function getCorrect() {
-				var questions = document.exam.elements;
-				var correct = '';
-				var comma = '';
-				
-				for (var i = 0, q; q = questions[i++];) {
-					if(q.type === 'hidden' && q.name === 'answer') {
-						correct += comma + q.value;
-						comma = ',';
-					}
-				}
-
-				return correct;
-			}
-
-			function getPoints() {
-				var questions = document.exam.elements;
-				var points = '';
-				var comma = '';
-				
-				for (var i = 0, q; q = questions[i++];) {
-					if(q.type === 'hidden' && q.name === 'points') {
-						points += comma + q.value;
-						comma = ',';
-					}
-				}
-
-				return points;
+					return true;
 			}
 		</script>
 	";
@@ -146,12 +99,40 @@ function takeExam($conn, $exname) {
 	return $out;
 }
 
-function submit($conn, $exname, $answers, $totalPoints) {
-	$result = $conn->query("INSERT INTO grade values ($_SESSION[id], '$exname', '$answers', $totalPoints)");
-}
-
 function showExam($conn, $exname) {
+	$out = "<h2>$exname</h2>";
+
+	$response = array();
+	$answers = $conn->query("SELECT * FROM grade WHERE s_id = '$_SESSION[id]' AND ex_name = '$exname'");
+	while ($row = $answers->fetch_assoc()) {
+		$out .= "<h3>Your score: $row[total]";
+		for ($i = 0; $i < strlen($row['correct_q']); $i += 2) {
+			$str = $row['correct_q'];
+			array_push($response, $str{$i});
+		}
+	}
+
+	$result = $conn->query("SELECT total_points FROM exam WHERE name = '$exname'");
+	while ($row = $result->fetch_assoc()) {
+		$out .= " / $row[total_points]</h3><hr>";
+	}
 	
+	$question = $conn->query("SELECT * FROM question WHERE ex_name = '$exname'");
+	while ($q_row = $question->fetch_assoc()) {
+		$out .= "<div class='question'>
+				<h4>$q_row[text]</h4>";
+		$num = $q_row['number'] - 1;
+		$out .= "Your answer: $response[$num]<br>";
+		$out .= "Correct answer: $q_row[correct]<br>";
+		if ($response[$num] == $q_row['correct']) {
+			$out .= "<br>Points earned: $q_row[num_points]<br>";
+		} else {
+			$out .= "<br>Points earned: 0<br>";
+		}
+		$out .= "</div>";
+	}
+
+	return $out;
 }
 
 ?>
