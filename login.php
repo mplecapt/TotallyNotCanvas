@@ -31,7 +31,8 @@ function login ($user, $pass) {
 		mysqli_close($conn);
 		if(verifyPass($pass, $row['password'])) {
 			$_SESSION['user'] = $_POST['username'];
-			$_SESSION['pass'] = $_POST['password'];
+			//$_SESSION['pass'] = $_POST['password'];
+			$_SESSION['id'] = $row['id'];
 
 			header("Location: dashboard.php");
 			exit;
